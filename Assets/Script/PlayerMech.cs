@@ -2,28 +2,25 @@ using UnityEngine;
 
 public class PlayerMech : MonoBehaviour
 {
-       //rigid body declared
     private Rigidbody rb;
 
-    //serialize done
-    [SerializeField] private float PlayerSpeed_walk;
-    [SerializeField] private float PlayerSpeed_run;
-    [SerializeField] private float PlayerSpeed_JumpForce;
+    [SerializeField] private float playerSpeedWalk = 5f;
+    [SerializeField] private float playerSpeedRun = 10f;
+    [SerializeField] private float playerJumpForce = 5f;
+    [SerializeField] private float rotationSpeed = 10f;
 
-    //ground collider
-    private bool GroundCollider;
+    private bool groundCollider;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-
     }
 
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
-            GroundCollider = true;
+            groundCollider = true;
         }
     }
 
@@ -31,22 +28,33 @@ public class PlayerMech : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
-            GroundCollider = false;
+            groundCollider = false;
         }
     }
 
     void FixedUpdate()
     {
-        Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        rb.MovePosition(rb.position + movement * PlayerSpeed_walk * Time.fixedDeltaTime);
+        float horizontal = Input.GetAxis("Horizontal");
+        float vertical = Input.GetAxis("Vertical");
+        bool isRunning = Input.GetKey(KeyCode.LeftShift);
+
+        float speed = isRunning ? playerSpeedRun : playerSpeedWalk;
+        Vector3 movement = new Vector3(horizontal, 0, vertical).normalized;
+
+        if (movement.magnitude > 0)
+        {
+            rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+            Quaternion targetRotation = Quaternion.LookRotation(movement);
+            rb.rotation = Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
+        }
     }
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Space) && GroundCollider)
+        if (Input.GetKeyDown(KeyCode.Space) && groundCollider)
         {
-            rb.AddForce(Vector3.up * PlayerSpeed_JumpForce, ForceMode.Impulse);
-            GroundCollider = false;
+            rb.AddForce(Vector3.up * playerJumpForce, ForceMode.Impulse);
+            groundCollider = false;
         }
     }
 }
