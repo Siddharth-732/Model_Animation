@@ -56,6 +56,7 @@ public class PlayerMech : MonoBehaviour
         }
         else
         {
+
             animator.SetBool("WalkStart", false);
         }
     }
